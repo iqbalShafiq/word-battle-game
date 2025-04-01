@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.20"
     application
 }
 
@@ -9,7 +8,7 @@ group = "id.usecase.word_battle"
 version = "1.0.0"
 application {
     mainClass.set("id.usecase.word_battle.ApplicationKt")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "true"}")
 }
 
 sourceSets {
