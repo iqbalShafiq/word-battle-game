@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.javatime.timestamp
 /**
  * Players table - Stores user account information
  */
-object Players : UUIDTable() {
+object PlayersTable : UUIDTable() {
     val username = varchar("username", 255).uniqueIndex()
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
     val lastActive = timestamp("last_active").defaultExpression(CurrentTimestamp)

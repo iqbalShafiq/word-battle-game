@@ -12,17 +12,19 @@ fun Routing.statusRoutes() {
         get {
             call.respond(
                 HttpStatusCode.OK,
+                mapOf("status" to "running")
+            )
+        }
+
+        get("/health") {
+            call.respond(
+                HttpStatusCode.OK,
                 mapOf(
-                    "status" to "OK",
-                    "timestamp" to Instant.now().toString(),
-                    "version" to "0.0.1"
+                    "status" to "healthy",
+                    "version" to "1.0.0",
+                    "timestamp" to System.currentTimeMillis()
                 )
             )
         }
-    }
-
-    // Basic health check endpoint for load balancers
-    get("/health") {
-        call.respond(HttpStatusCode.OK)
     }
 }

@@ -26,4 +26,11 @@ interface WordRepository {
      * (typically 7-10 letters with a good mix of vowels and consonants)
      */
     suspend fun generateRandomLetters(length: Int = 8): String
+
+    /**
+     * Get a list of random words from the dictionary
+     * @param count Maximum number of words to retrieve
+     * @return List of random words
+     */
+    suspend fun getRandomWords(count: Int): List<String>
 }

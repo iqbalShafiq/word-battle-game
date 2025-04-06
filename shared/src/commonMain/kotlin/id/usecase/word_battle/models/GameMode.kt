@@ -1,4 +1,4 @@
-package id.usecase.word_battle.data.models.game
+package id.usecase.word_battle.models
 
 import kotlinx.serialization.Serializable
 

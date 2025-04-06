@@ -7,8 +7,11 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class RoundStats(
-    val validWordsCount: Int = 0,
-    val highestScoringWord: String = "",
+    val startTime: Long = System.currentTimeMillis(),
+    val endTime: Long? = null,
+    val totalWords: Int = 0,
+    val validWords: Int = 0,
     val highestScore: Int = 0,
-    val roundWinnerId: String? = null
+    val highestScoringPlayer: String? = null,
+    val highestScoringWord: String? = null
 )

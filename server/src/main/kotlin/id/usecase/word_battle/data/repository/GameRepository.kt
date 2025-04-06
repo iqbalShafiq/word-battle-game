@@ -1,9 +1,9 @@
 package id.usecase.word_battle.data.repository
 
-import id.usecase.word_battle.data.models.game.GameMode
-import id.usecase.word_battle.data.models.game.GameRound
+import id.usecase.word_battle.models.GameMode
+import id.usecase.word_battle.data.models.game.GameRoundEntity
 import id.usecase.word_battle.data.models.game.GameSession
-import id.usecase.word_battle.data.models.game.WordSubmission
+import id.usecase.word_battle.data.models.game.WordSubmissionEntity
 
 /**
  * Repository for game-related database operations
@@ -36,15 +36,19 @@ interface GameRepository {
         gameSessionId: String,
         roundNumber: Int,
         letters: String
-    ): GameRound?
+    ): GameRoundEntity?
 
     /**
      * Add word submission to a round
      */
-    suspend fun addWordSubmission(roundId: String, submission: WordSubmission): Boolean
+    suspend fun addWordSubmission(roundId: String, submission: WordSubmissionEntity): Boolean
 
     /**
      * Get rounds for a game session
      */
-    suspend fun getRoundsForGameSession(gameSessionId: String): List<GameRound>
+    suspend fun getRoundsForGameSession(gameSessionId: String): List<GameRoundEntity>
+
+    suspend fun getRound(roundId: String): GameRoundEntity?
+
+    suspend fun getActiveGamesForPlayer(playerId: String): List<GameSession>
 }

@@ -1,5 +1,6 @@
 package id.usecase.word_battle.data.models.game
 
+import id.usecase.word_battle.models.GameMode
 import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.util.UUID

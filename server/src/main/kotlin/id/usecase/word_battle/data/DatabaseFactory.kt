@@ -3,10 +3,10 @@ package id.usecase.word_battle.data
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import id.usecase.evaluasi.dotenv.DotenvConfig.dotenv
-import id.usecase.word_battle.data.models.game.GameRounds
-import id.usecase.word_battle.data.models.game.GameSessions
-import id.usecase.word_battle.data.models.player.Players
-import id.usecase.word_battle.data.models.word.Words
+import id.usecase.word_battle.data.models.game.GameRoundsTable
+import id.usecase.word_battle.data.models.game.GameSessionsTable
+import id.usecase.word_battle.data.models.player.PlayersTable
+import id.usecase.word_battle.data.models.word.WordsTable
 import kotlinx.coroutines.Dispatchers
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
@@ -43,10 +43,15 @@ object DatabaseFactory {
         // Connect Exposed to the database
         val database = Database.connect(dataSource)
 
-        // Create tables if they don't exist (redundant with Flyway but useful for verification)
+        // Create tables if they don't exist
         transaction(database) {
             addLogger(StdOutSqlLogger)
-            SchemaUtils.createMissingTablesAndColumns(Players, GameSessions, GameRounds, Words)
+            SchemaUtils.createMissingTablesAndColumns(
+                PlayersTable,
+                GameSessionsTable,
+                GameRoundsTable,
+                WordsTable
+            )
         }
 
         logger.info("Database initialized successfully")

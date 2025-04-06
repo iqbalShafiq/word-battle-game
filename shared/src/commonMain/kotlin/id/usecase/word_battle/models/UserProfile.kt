@@ -2,11 +2,12 @@ package id.usecase.word_battle.models
 
 import kotlinx.serialization.Serializable
 
+/**
+ * Simplified user profile for sharing between platforms
+ */
 @Serializable
-data class Player(
+data class UserProfile(
     val id: String,
     val username: String,
-    val score: Int = 0,
-    val isReady: Boolean = false,
-    val isActive: Boolean = true
+    val stats: UserStats = UserStats()
 )
