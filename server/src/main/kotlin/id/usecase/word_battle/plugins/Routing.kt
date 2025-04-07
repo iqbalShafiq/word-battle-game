@@ -16,8 +16,8 @@ fun Application.configureRouting() {
         get("/") { call.respondText("Ktor: ${Greeting().greet()}") }
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
         statusRoutes()
-        authRoutes()
         gameRoutes()
-        socketRoutes()
     }
+    authRoutes()
+    socketRoutes()
 }

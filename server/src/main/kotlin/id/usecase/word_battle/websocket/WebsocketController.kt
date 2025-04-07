@@ -82,17 +82,8 @@ class WebSocketController : KoinComponent {
         try {
             val message = Json.decodeFromString<WebSocketMessage>(text)
 
-            when (message.type) {
-                MessageType.COMMAND -> {
-                    message.command?.let { handleCommand(it) }
-                }
-
-                MessageType.PONG -> { /* Client responded to ping, nothing to do */
-                }
-
-                else -> {
-                    // Ignore other message types from client
-                }
+            if (message.type == MessageType.COMMAND) {
+                message.command?.let { handleCommand(it) }
             }
         } catch (e: Exception) {
             logger.error("Error processing WebSocket message: ${e.message}")
@@ -108,7 +99,7 @@ class WebSocketController : KoinComponent {
     /**
      * Handle game commands from clients
      */
-    private suspend fun handleCommand(command: GameCommand) {
+    private fun handleCommand(command: GameCommand) {
         coroutineScope.launch {
             when (command) {
                 is GameCommand.JoinQueue -> handleJoinQueue(command)
@@ -207,8 +198,7 @@ class WebSocketController : KoinComponent {
      * Handle chat message from player
      */
     private suspend fun handleChatMessage(command: GameCommand.ChatMessage) {
-        val player = userService.getPlayerProfile(command.playerId)
-        if (player == null) return
+        val player = userService.getPlayerProfile(command.playerId) ?: return
 
         // Get all player IDs in the game
         val allPlayers = gameService.getAllPlayersInGame(command.gameId)

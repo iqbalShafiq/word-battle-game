@@ -9,7 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -18,9 +18,9 @@ import java.util.concurrent.CopyOnWriteArrayList
  */
 class MatchmakingService(
     private val gameService: GameService,
-    private val userService: UserService
+    private val userService: UserService,
+    private val logger: Logger
 ) {
-    private val logger = LoggerFactory.getLogger(this::class.java)
     private val scope = CoroutineScope(Dispatchers.Default)
 
     // Mutex to safely modify queues during matchmaking
@@ -39,7 +39,7 @@ class MatchmakingService(
 
     init {
         // Initialize queues for each game mode
-        GameMode.values().forEach { mode ->
+        GameMode.entries.forEach { mode ->
             queues[mode] = CopyOnWriteArrayList()
         }
 

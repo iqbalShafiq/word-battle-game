@@ -12,7 +12,7 @@ object GameSessionsTable : UUIDTable() {
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
     val endedAt = timestamp("ended_at").nullable()
     val players = text("players").default("[]")
-    val winnerId = reference("winner_id", PlayersTable.id).nullable()
+    val winnerId = reference("winner_id", PlayersTable).nullable()
     val gameMode = varchar("game_mode", 50).default("CLASSIC")
     val isActive = bool("is_active").default(true)
 }

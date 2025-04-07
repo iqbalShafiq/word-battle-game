@@ -15,6 +15,8 @@ import id.usecase.word_battle.service.MatchmakingService
 import id.usecase.word_battle.service.UserService
 import id.usecase.word_battle.websocket.WebSocketController
 import org.koin.dsl.module
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 val serverModule = module {
     // Repositories (these will need implementations later)
@@ -27,11 +29,14 @@ val serverModule = module {
     single { ScoringSystem() }
     single { GameRoomManager() }
 
+    // Logger
+    single<Logger> { LoggerFactory.getLogger(MatchmakingService::class.java) }
+
     // Services
     single { UserService(get()) }
     single { GameService(get(), get()) }
     single { DictionaryService(get()) }
-    single { MatchmakingService(get(), get()) }
+    single { MatchmakingService(get(), get(), get()) }
 
     // WebSocket components
     single { WebSocketController() }

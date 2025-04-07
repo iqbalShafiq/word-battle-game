@@ -29,6 +29,7 @@ class GameService(
     // Cache for active games and players to help with disconnection handling
     private val activePlayerGames = mutableMapOf<String, MutableSet<String>>() // playerId -> gameIds
     private val gameMaxRounds = 5 // Default max rounds per game
+    private val playerReadyStatus = mutableMapOf<String, Boolean>() // playerId -> ready status
 
     /**
      * Create a new game session
@@ -288,9 +289,23 @@ class GameService(
     /**
      * Set player ready status
      */
-    fun setPlayerReady(playerId: String): Boolean {
-        // In a real implementation, this would update the player's ready state
-        // and possibly start the game if all players are ready
+    suspend fun setPlayerReady(playerId: String): Boolean {
+        playerReadyStatus[playerId] = true
+
+        // Check if all players in all active games are ready
+        val allPlayersReady = activePlayerGames[playerId]?.all { gameId ->
+            val gameSession = gameRepository.getGameSession(gameId)
+            gameSession?.players?.all { playerReadyStatus[it] == true } ?: false
+        } ?: false
+
+        if (allPlayersReady) {
+            activePlayerGames[playerId]?.forEach { gameId ->
+                gameScope.launch {
+                    startGame(gameId)
+                }
+            }
+        }
+
         return true
     }
 

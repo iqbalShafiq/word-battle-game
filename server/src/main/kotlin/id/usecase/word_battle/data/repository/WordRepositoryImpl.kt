@@ -104,6 +104,7 @@ class WordRepositoryImpl : WordRepository {
         WordsTable.batchInsert(words) { word ->
             this[WordsTable.word] = word
             this[WordsTable.isValid] = true
+            this[WordsTable.length] = word.length
         }
     }
 

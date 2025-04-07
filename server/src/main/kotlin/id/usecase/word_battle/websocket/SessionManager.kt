@@ -37,7 +37,7 @@ object SessionManager {
     /**
      * Get a session by player ID
      */
-    fun getSession(playerId: String): PlayerSession? = sessions[playerId]
+    private fun getSession(playerId: String): PlayerSession? = sessions[playerId]
 
     /**
      * Send an event to a specific player
