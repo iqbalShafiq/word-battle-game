@@ -34,7 +34,7 @@ val serverModule = module {
 
     // Services
     single { UserService(get()) }
-    single { GameService(get(), get()) }
+    single { GameService(get(), get(), get()) }
     single { DictionaryService(get()) }
     single { MatchmakingService(get(), get(), get()) }
 

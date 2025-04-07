@@ -1,5 +1,7 @@
 package id.usecase.word_battle.service
 
+import id.usecase.word_battle.config.Rules
+import id.usecase.word_battle.config.Timing
 import id.usecase.word_battle.models.GameMode
 import id.usecase.word_battle.data.models.game.GameRoundEntity
 import id.usecase.word_battle.data.models.game.GameSession
@@ -7,6 +9,7 @@ import id.usecase.word_battle.data.models.game.WordSubmissionEntity
 import id.usecase.word_battle.data.models.game.toSharedModel
 import id.usecase.word_battle.data.repository.GameRepository
 import id.usecase.word_battle.data.repository.WordRepository
+import id.usecase.word_battle.game.ScoringSystem
 import id.usecase.word_battle.network.game.WordSubmissionResponse
 import id.usecase.word_battle.protocol.GameEvent
 import id.usecase.word_battle.websocket.SessionManager
@@ -21,14 +24,15 @@ import org.slf4j.LoggerFactory
  */
 class GameService(
     private val gameRepository: GameRepository,
-    private val wordRepository: WordRepository
+    private val wordRepository: WordRepository,
+    private val scoringSystem: ScoringSystem
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
     private val gameScope = CoroutineScope(Dispatchers.Default)
 
     // Cache for active games and players to help with disconnection handling
     private val activePlayerGames = mutableMapOf<String, MutableSet<String>>() // playerId -> gameIds
-    private val gameMaxRounds = 5 // Default max rounds per game
+    private val gameMaxRounds = Rules.DEFAULT_ROUNDS // Default max rounds per game
     private val playerReadyStatus = mutableMapOf<String, Boolean>() // playerId -> ready status
 
     /**
@@ -70,7 +74,7 @@ class GameService(
         val isValid = wordRepository.isValidWord(word)
 
         // Calculate score (simple algorithm based on word length)
-        val score = if (isValid) calculateWordScore(word) else 0
+        val score = if (isValid) scoringSystem.calculateScore(word) else 0
 
         // Create submission
         val submission = WordSubmissionEntity(
@@ -89,24 +93,6 @@ class GameService(
             word = word,
             score = score
         )
-    }
-
-    /**
-     * Calculate word score based on length and letter complexity
-     */
-    private fun calculateWordScore(word: String): Int {
-        // Simple scoring: 1 point per letter, bonus for longer words
-        val baseScore = word.length
-
-        // Bonus for words longer than 5 letters
-        val bonus = when {
-            word.length >= 8 -> 10
-            word.length >= 6 -> 5
-            word.length >= 4 -> 2
-            else -> 0
-        }
-
-        return baseScore + bonus
     }
 
     /**
@@ -269,7 +255,7 @@ class GameService(
      */
     private fun scheduleRoundEnd(gameId: String, roundId: String) {
         gameScope.launch {
-            delay(60000) // 60 seconds round time
+            delay(timeMillis = Timing.ROUND_DURATION_SECONDS * 1_000L) // 60 seconds round time
             endRound(gameId, roundId)
         }
     }

@@ -1,5 +1,6 @@
 package id.usecase.word_battle.service
 
+import id.usecase.word_battle.config.Timing
 import id.usecase.word_battle.models.GameMode
 import id.usecase.word_battle.protocol.GameEvent
 import id.usecase.word_battle.websocket.SessionManager
@@ -163,7 +164,7 @@ class MatchmakingService(
     private fun startGameAfterDelay(gameId: String) {
         scope.launch {
             // Wait a moment to let players see who they're matched with
-            delay(5000)
+            delay(Timing.ROUND_TRANSITION_SECONDS * 1_000L)
 
             // Start the game (first round)
             gameService.startGame(gameId)
@@ -186,7 +187,7 @@ class MatchmakingService(
                 }
 
                 // Wait before next check
-                delay(5000)
+                delay(Timing.ROUND_TRANSITION_SECONDS * 1_000L)
             }
         }
     }

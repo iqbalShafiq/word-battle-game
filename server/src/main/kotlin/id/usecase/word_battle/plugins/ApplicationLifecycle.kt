@@ -2,7 +2,6 @@ package id.usecase.word_battle.plugins
 
 import id.usecase.word_battle.game.GameRoomManager
 import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationEnvironment
 import io.ktor.server.application.ApplicationStopping
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

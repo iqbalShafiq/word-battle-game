@@ -1,7 +1,5 @@
 package id.usecase.word_battle.game
 
-import id.usecase.word_battle.data.models.game.GameSession
-import id.usecase.word_battle.data.repository.GameRepository
 import id.usecase.word_battle.protocol.GameEvent
 import id.usecase.word_battle.service.GameService
 import id.usecase.word_battle.websocket.SessionManager
@@ -23,8 +21,6 @@ import java.util.concurrent.Executors
  */
 class GameRoomManager : KoinComponent {
     private val logger = LoggerFactory.getLogger(this::class.java)
-    private val gameService: GameService by inject()
-    private val gameRepository: GameRepository by inject()
 
     // Active game rooms with their state
     private val activeRooms = ConcurrentHashMap<String, GameRoom>()
@@ -34,62 +30,12 @@ class GameRoomManager : KoinComponent {
     private val gameScope = CoroutineScope(gameDispatcher + SupervisorJob())
 
     /**
-     * Create a new game room
-     */
-    suspend fun createRoom(gameSession: GameSession): GameRoom {
-        val room = GameRoom(
-            gameId = gameSession.id,
-            playerIds = gameSession.players.toMutableList(),
-            gameMode = gameSession.gameMode,
-            createdAt = System.currentTimeMillis(),
-            scope = gameScope,
-            gameService = gameService
-        )
-
-        // Store in active rooms
-        activeRooms[gameSession.id] = room
-        logger.info("Created game room for game ${gameSession.id} with ${gameSession.players.size} players")
-
-        return room
-    }
-
-    /**
-     * Get a game room by ID
-     */
-    fun getRoom(gameId: String): GameRoom? = activeRooms[gameId]
-
-    /**
-     * Start a game in a room
-     */
-    suspend fun startGame(gameId: String) {
-        val room = activeRooms[gameId] ?: return
-        room.start()
-    }
-
-    /**
      * End and cleanup a game room
      */
-    suspend fun endRoom(gameId: String) {
+    private fun endRoom(gameId: String) {
         val room = activeRooms.remove(gameId) ?: return
         room.cleanup()
         logger.info("Game room for game $gameId has been ended and cleaned up")
-    }
-
-    /**
-     * Handle player disconnection
-     */
-    suspend fun handlePlayerDisconnect(playerId: String) {
-        // Find rooms where this player was participating
-        val roomsWithPlayer = activeRooms.values.filter { playerId in it.playerIds }
-
-        for (room in roomsWithPlayer) {
-            room.playerDisconnected(playerId)
-
-            // If room is now empty or can't continue, clean it up
-            if (room.playerIds.isEmpty() || !room.canContinue()) {
-                endRoom(room.gameId)
-            }
-        }
     }
 
     /**
@@ -144,7 +90,7 @@ class GameRoomManager : KoinComponent {
     /**
      * Shutdown the manager and all active rooms
      */
-    suspend fun shutdown() {
+    fun shutdown() {
         gameScope.cancel()
 
         // Clean up all rooms
