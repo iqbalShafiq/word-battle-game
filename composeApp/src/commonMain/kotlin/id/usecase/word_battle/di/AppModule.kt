@@ -1,16 +1,18 @@
 package id.usecase.word_battle.di
 
+import id.usecase.word_battle.data.repository.AuthRepositoryImpl
+import id.usecase.word_battle.data.repository.GameRepositoryImpl
+import id.usecase.word_battle.domain.repository.AuthRepository
+import id.usecase.word_battle.domain.repository.GameRepository
+import id.usecase.word_battle.ui.screens.auth.LoginViewModel
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val appModule = module {
-    // Will be populated as we add repositories, viewmodels, etc.
+    // Repositories
+    single<AuthRepository> { AuthRepositoryImpl() }
+    single<GameRepository> { GameRepositoryImpl() }
 
-    // Network module - will be added later
-    // includes { networkModule }
-
-    // ViewModels - will be added later
-    // viewModel { MainViewModel(get()) }
-
-    // Repositories - will be added later
-    // single { UserRepository(get()) }
+    // ViewModels
+    viewModelOf(::LoginViewModel)
 }
