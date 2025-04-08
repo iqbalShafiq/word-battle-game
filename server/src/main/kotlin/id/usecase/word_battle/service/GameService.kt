@@ -281,8 +281,8 @@ class GameService(
         // Check if all players in all active games are ready
         val allPlayersReady = activePlayerGames[playerId]?.all { gameId ->
             val gameSession = gameRepository.getGameSession(gameId)
-            gameSession?.players?.all { playerReadyStatus[it] == true } ?: false
-        } ?: false
+            gameSession?.players?.all { playerReadyStatus[it] == true } == true
+        } == true
 
         if (allPlayersReady) {
             activePlayerGames[playerId]?.forEach { gameId ->
@@ -339,5 +339,16 @@ class GameService(
     suspend fun getAllPlayersInGame(gameId: String): List<String> {
         val gameSession = gameRepository.getGameSession(gameId) ?: return emptyList()
         return gameSession.players
+    }
+
+    /**
+     * Get game session details
+     */
+    suspend fun getGame(gameId: String): GameSession? {
+        return gameRepository.getGameSession(gameId)
+    }
+
+    suspend fun getGameRound(gameId: String): List<GameRoundEntity> {
+        return gameRepository.getRoundsForGameSession(gameId)
     }
 }
