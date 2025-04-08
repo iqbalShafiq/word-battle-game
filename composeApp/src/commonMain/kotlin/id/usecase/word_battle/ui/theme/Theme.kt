@@ -9,13 +9,11 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 private val LightColors = lightColorScheme(
     primary = Color(0xFF2E5BC9),
@@ -73,21 +71,6 @@ fun WordBattleTheme(
 
         darkTheme -> DarkColors
         else -> LightColors
-    }
-
-    val systemUiController = rememberSystemUiController()
-    val useDarkIcons = !darkTheme
-
-    DisposableEffect(systemUiController, useDarkIcons) {
-        systemUiController.setSystemBarsColor(
-            color = Color.Transparent,
-            darkIcons = useDarkIcons
-        )
-        systemUiController.setNavigationBarColor(
-            color = colorScheme.surface,
-            darkIcons = useDarkIcons
-        )
-        onDispose {}
     }
 
     val view = LocalView.current

@@ -49,10 +49,6 @@ kotlin {
             // Navigation
             implementation(libs.androidx.navigation.compose)
 
-            // Accompanist
-            implementation(libs.accompanist.systemuicontroller)
-            implementation(libs.accompanist.adaptive)
-
             // Ktor Android
             implementation(libs.ktor.client.android)
 

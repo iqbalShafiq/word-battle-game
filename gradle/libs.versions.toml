@@ -26,8 +26,6 @@ coil = "2.5.0"
 postgresql = "42.6.0"
 
 [libraries]
-accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanist" }
-accompanist-adaptive = { module = "com.google.accompanist:accompanist-adaptive", version.ref = "accompanist" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenvKotlin" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
