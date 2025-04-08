@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import id.usecase.word_battle.ui.screens.auth.LoginScreen
+import id.usecase.word_battle.ui.screens.auth.RegisterScreen
 import id.usecase.word_battle.ui.screens.demo.ComponentsDemoScreen
 import id.usecase.word_battle.ui.screens.game.GameScreen
 import id.usecase.word_battle.ui.screens.home.HomeScreen
@@ -53,11 +54,13 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable<Register> {
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Home)
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.navigate(Home) {
+                        popUpTo(Login) { inclusive = true }
+                    }
                 },
-                onNavigateToRegister = { }
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -83,7 +86,7 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable<Game>{ backStackEntry ->
+        composable<Game> { backStackEntry ->
             val gameRoom: Game = backStackEntry.toRoute()
             val gameId = gameRoom.gameId
             GameScreen(gameId = gameId) {
@@ -92,7 +95,11 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable<Profile> {
-            ProfileScreen { navController.popBackStack() }
+            ProfileScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
 
         composable<ComponentsDemo> {
