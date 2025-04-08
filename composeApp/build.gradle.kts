@@ -1,5 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -11,17 +9,12 @@ plugins {
 
 kotlin {
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
-    
+
     sourceSets {
-        androidMain.dependencies {
-            implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
-        }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -32,6 +25,43 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(projects.shared)
+
+            // Ktor for networking
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.client.websockets)
+
+            // Koin for DI
+            implementation(libs.koin.core)
+        }
+        androidMain.dependencies {
+            implementation(compose.preview)
+            implementation(libs.androidx.appcompat)
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.compose.ui.tooling.preview)
+            implementation(libs.androidx.lifecycle.runtime.compose)
+
+            // Material 3
+            implementation(libs.androidx.material3)
+            implementation(libs.androidx.material.icons.extended)
+
+            // Navigation
+            implementation(libs.androidx.navigation.compose)
+
+            // Accompanist
+            implementation(libs.accompanist.systemuicontroller)
+            implementation(libs.accompanist.adaptive)
+
+            // Ktor Android
+            implementation(libs.ktor.client.android)
+
+            // Koin Android
+            implementation(libs.koin.android)
+            implementation(libs.koin.androidx.compose)
+
+            // Image loading
+            implementation(libs.coil.compose)
         }
     }
 }
@@ -58,8 +88,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
