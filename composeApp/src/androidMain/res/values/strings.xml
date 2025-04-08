@@ -1,3 +1,22 @@
 <resources>
-    <string name="app_name">WordBattle</string>
+    <string name="app_name">Word Battle</string>
+
+    <!-- Auth Strings -->
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+
+    <!-- Game Strings -->
+    <string name="find_match">Find Match</string>
+    <string name="round">Round %1$d</string>
+    <string name="your_turn">Your Turn!</string>
+    <string name="opponent_turn">Opponent\'s Turn</string>
+    <string name="submit_word">Submit</string>
+    <string name="time_remaining">Time: %1$d</string>
+
+    <!-- General UI -->
+    <string name="loading">Loading…</string>
+    <string name="error_occurred">Something went wrong</string>
+    <string name="try_again">Try Again</string>
 </resources>
