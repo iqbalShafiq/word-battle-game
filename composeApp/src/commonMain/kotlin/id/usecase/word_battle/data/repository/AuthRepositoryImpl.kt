@@ -1,55 +1,78 @@
 package id.usecase.word_battle.data.repository
 
-import id.usecase.word_battle.domain.model.User
-import id.usecase.word_battle.domain.model.UserStats
+import android.util.Log
+import id.usecase.word_battle.auth.AuthState
+import id.usecase.word_battle.auth.TokenManager
 import id.usecase.word_battle.domain.repository.AuthRepository
+import id.usecase.word_battle.models.UserProfile
+import id.usecase.word_battle.network.AuthApi
+import id.usecase.word_battle.network.UserApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 /**
  * Implementation of AuthRepository
  */
-class AuthRepositoryImpl : AuthRepository {
+class AuthRepositoryImpl(
+    private val authApi: AuthApi,
+    private val userApi: UserApi,
+    private val tokenManager: TokenManager
+) : AuthRepository {
 
-    private val authStateFlow = MutableStateFlow(false)
-    private var currentUser: User? = null
-
-    override suspend fun login(username: String, password: String): Result<User> {
-        // In a real app, this would make an API call
-        // For now, we'll simulate successful login
+    override suspend fun login(username: String, password: String): Result<UserProfile> {
         return try {
-            // Create dummy user
-            val user = User(
-                id = "user-${System.currentTimeMillis()}",
-                username = username,
-                stats = UserStats()
+            // Call login API
+            val authResponse = authApi.login(username, password)
+
+            // Save tokens
+            tokenManager.saveTokens(
+                accessToken = authResponse.token.toString()
             )
 
-            // Store logged in user
-            currentUser = user
-            authStateFlow.value = true
-
+            // Get user details with the new token
+            val user = userApi.getCurrentUser()
             Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    override suspend fun register(username: String, password: String): Result<User> {
-        // Similar to login, but would create a new user account
-        return login(username, password)
+    override suspend fun register(username: String, password: String): Result<UserProfile> {
+        return try {
+            // Call register API
+            val authResponse = authApi.register(username, password)
+
+            // Save tokens
+            tokenManager.saveTokens(
+                accessToken = authResponse.token.toString()
+            )
+
+            // Get user details with the new token
+            val user = userApi.getCurrentUser()
+            Result.success(user)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
-    override suspend fun getCurrentUser(): User? {
-        return currentUser
+    override suspend fun getCurrentUser(): UserProfile? {
+        return try {
+            userApi.getCurrentUser()
+        } catch (e: Exception) {
+            Log.d(TAG, "getCurrentUser: Exception occurred when : ${e.message}")
+            null
+        }
     }
 
     override suspend fun logout() {
-        currentUser = null
-        authStateFlow.value = false
+        tokenManager.clearTokens()
     }
 
     override fun observeAuthState(): Flow<Boolean> {
-        return authStateFlow
+        return tokenManager.authState.map { it is AuthState.Authenticated }
+    }
+
+    companion object {
+        private val TAG = AuthRepositoryImpl::class.java.simpleName
     }
 }

@@ -1,18 +1,15 @@
 package id.usecase.word_battle.ui.screens.home
 
-import id.usecase.word_battle.domain.model.User
 import id.usecase.word_battle.domain.repository.AuthRepository
 import id.usecase.word_battle.domain.repository.GameRepository
+import id.usecase.word_battle.models.UserProfile
 import id.usecase.word_battle.mvi.MviViewModel
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 /**
  * Home screen state
  */
 data class HomeState(
-    val user: User? = null,
+    val user: UserProfile? = null,
     val isLoading: Boolean = true
 )
 

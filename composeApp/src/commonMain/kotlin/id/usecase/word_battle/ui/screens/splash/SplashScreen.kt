@@ -15,8 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import id.usecase.word_battle.R
+import id.usecase.word_battle.ui.theme.WordBattleTheme
 import kotlinx.coroutines.delay
 
 @Composable
@@ -61,5 +63,16 @@ fun SplashScreen(
                 textAlign = TextAlign.Center
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun SplashScreenPreview() {
+    WordBattleTheme {
+        SplashScreen(
+            onNavigateToLogin = {},
+            onNavigateToHome = {}
+        )
     }
 }

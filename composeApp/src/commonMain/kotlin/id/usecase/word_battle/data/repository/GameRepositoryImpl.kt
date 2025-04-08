@@ -1,9 +1,9 @@
 package id.usecase.word_battle.data.repository
 
-import id.usecase.word_battle.domain.model.Game
-import id.usecase.word_battle.domain.model.GameState
-import id.usecase.word_battle.domain.model.Player
 import id.usecase.word_battle.domain.repository.GameRepository
+import id.usecase.word_battle.models.GamePlayer
+import id.usecase.word_battle.models.GameRoom
+import id.usecase.word_battle.models.GameState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +17,7 @@ import java.util.UUID
 class GameRepositoryImpl : GameRepository {
 
     // Mock game state for demo
-    private val gameFlow = MutableStateFlow<Game?>(null)
+    private val gameFlow = MutableStateFlow<GameRoom?>(null)
 
     override suspend fun findMatch(): Result<String> {
         // Simulate network delay
@@ -27,15 +27,15 @@ class GameRepositoryImpl : GameRepository {
         val gameId = UUID.randomUUID().toString()
 
         // Create mock game
-        val game = Game(
+        val game = GameRoom(
             id = gameId,
-            players = listOf(
-                Player(id = "player-1", username = "You", isCurrentPlayer = true),
-                Player(id = "player-2", username = "Opponent")
+            gamePlayers = listOf(
+                GamePlayer(id = "player-1", username = "You", isActive = true),
+                GamePlayer(id = "player-2", username = "Opponent")
             ),
             currentRound = 1,
             maxRounds = 3,
-            state = GameState.WAITING
+            state = GameState.IN_PROGRESS,
         )
 
         gameFlow.value = game
@@ -47,7 +47,7 @@ class GameRepositoryImpl : GameRepository {
         gameFlow.value = null
     }
 
-    override suspend fun joinGame(gameId: String): Result<Game> {
+    override suspend fun joinGame(gameId: String): Result<GameRoom> {
         // In a real app, would connect to an existing game
         val currentGame = gameFlow.value ?: return Result.failure(Exception("Game not found"))
         return Result.success(currentGame)
@@ -63,24 +63,24 @@ class GameRepositoryImpl : GameRepository {
 
         // Update player score in game state
         val currentGame = gameFlow.value ?: return Result.failure(Exception("Game not found"))
-        val updatedPlayers = currentGame.players.map { player ->
-            if (player.isCurrentPlayer) {
+        val updatedPlayers = currentGame.gamePlayers.map { player ->
+            if (player.isActive) {
                 player.copy(score = player.score + points)
             } else {
                 player
             }
         }
 
-        gameFlow.value = currentGame.copy(players = updatedPlayers)
+        gameFlow.value = currentGame.copy(gamePlayers = updatedPlayers)
 
         return Result.success(points)
     }
 
     override fun observeGameState(gameId: String): Flow<GameState> {
-        return gameFlow.map { it?.state ?: GameState.WAITING }
+        return gameFlow.map { it?.state ?: GameState.IN_PROGRESS }
     }
 
-    override fun observePlayers(gameId: String): Flow<List<Player>> {
-        return gameFlow.map { it?.players ?: emptyList() }
+    override fun observePlayers(gameId: String): Flow<List<GamePlayer>> {
+        return gameFlow.map { it?.gamePlayers ?: emptyList() }
     }
 }

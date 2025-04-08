@@ -22,11 +22,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import id.usecase.word_battle.ui.components.BorderedButton
 import id.usecase.word_battle.ui.components.PasswordTextField
 import id.usecase.word_battle.ui.components.PrimaryButton
 import id.usecase.word_battle.ui.components.StandardTextField
+import id.usecase.word_battle.ui.theme.WordBattleTheme
 
 @Composable
 fun LoginScreen(
@@ -103,5 +105,16 @@ fun LoginScreen(
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun LoginScreenPreview() {
+    WordBattleTheme {
+        LoginScreen(
+            onLoginSuccess = {},
+            onNavigateToRegister = {}
+        )
     }
 }

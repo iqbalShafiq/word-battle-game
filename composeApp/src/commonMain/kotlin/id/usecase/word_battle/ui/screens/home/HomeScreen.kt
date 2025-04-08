@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,10 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import id.usecase.word_battle.ui.components.PrimaryButton
 import id.usecase.word_battle.ui.components.SecondaryButton
 import id.usecase.word_battle.ui.components.StandardCard
+import id.usecase.word_battle.ui.theme.WordBattleTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +41,7 @@ fun HomeScreen(
                 title = { Text("Word Battle") },
                 actions = {
                     IconButton(onClick = onNavigateToProfile) {
-                        Icon(Icons.Rounded.PlayArrow, contentDescription = "Profile")
+                        Icon(Icons.Rounded.Person, contentDescription = "Profile")
                     }
                 }
             )
@@ -58,7 +61,7 @@ fun HomeScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             StandardCard(
                 modifier = Modifier.fillMaxWidth()
@@ -84,7 +87,7 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             SecondaryButton(
                 text = "Logout",
@@ -92,5 +95,17 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth()
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun HomeScreenPreview() {
+    WordBattleTheme {
+        HomeScreen(
+            onNavigateToLobby = {},
+            onNavigateToProfile = {},
+            onLogout = {}
+        )
     }
 }
