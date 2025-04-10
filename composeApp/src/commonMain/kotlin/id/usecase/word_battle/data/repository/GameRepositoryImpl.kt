@@ -1,5 +1,6 @@
 package id.usecase.word_battle.data.repository
 
+import id.usecase.word_battle.domain.model.Chat
 import id.usecase.word_battle.domain.repository.GameRepository
 import id.usecase.word_battle.models.GameMode
 import id.usecase.word_battle.models.GamePlayer
@@ -16,20 +17,26 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * Implementation of GameRepository
- * This is a mock implementation for demo purposes
- */
 class GameRepositoryImpl(
     private val webSocketClient: GameWebSocketClient,
-    private val scope: CoroutineScope
+    scope: CoroutineScope
 ) : GameRepository {
-    // Mock game state for demo
-    private val gameState = MutableStateFlow<GameRoom?>(null)
+
+    private val waitingEstimation = MutableStateFlow(0)
+    private val gameRoom = MutableStateFlow<GameRoom?>(null)
+    private val chatRoom = MutableStateFlow<List<Chat>>(emptyList())
 
     init {
         scope.launch {
-            // Listen for game updates from WebSocket
+            // Player joined the queue
+            webSocketClient.incomingCommand
+                .filter { it is GameEvent.QueueJoined }
+                .map { it as GameEvent.QueueJoined }
+                .collect { queue ->
+                    waitingEstimation.update { queue.estimatedWaitTime }
+                }
+
+            // Game has created
             webSocketClient.incomingCommand
                 .filter { it is GameEvent.GameCreated }
                 .map {
@@ -41,18 +48,76 @@ class GameRepositoryImpl(
                     )
                 }
                 .collect { game ->
-                    gameState.update {
-                        it?.copy(
+                    gameRoom.update {
+                        GameRoom(
                             id = game.id,
                             gamePlayers = game.gamePlayers,
                             state = game.state
                         )
                     }
                 }
+
+            // New round has started
+            webSocketClient.incomingCommand
+                .filter { it is GameEvent.RoundStarted }
+                .map { it as GameEvent.RoundStarted }
+                .collect { round ->
+                    gameRoom.update {
+                        it?.copy(
+                            currentRound = round.round.roundNumber,
+                            currentLetters = round.round.letters
+                        )
+                    }
+                }
+
+            // Chat message received
+            webSocketClient.incomingCommand
+                .filter { it is GameEvent.ChatReceived }
+                .map {
+                    val receivedChat = it as GameEvent.ChatReceived
+                    Chat(
+                        playerId = receivedChat.playerId,
+                        message = receivedChat.message,
+                        timestamp = receivedChat.timestamp
+                    )
+                }
+                .collect { chat -> chatRoom.update { it + chat } }
+
+            // Player score updated
+            webSocketClient.incomingCommand
+                .filter { it is GameEvent.WordResult }
+                .map { it as GameEvent.WordResult }
+                .collect { result ->
+                    gameRoom.update {
+                        it?.copy(
+                            gamePlayers = it.gamePlayers.map { player ->
+                                if (player.id == result.playerId) {
+                                    player.copy(
+                                        score = player.score + result.score
+                                    )
+                                } else {
+                                    player
+                                }
+                            }
+                        )
+                    }
+                }
+
+            // Round ended
+            webSocketClient.incomingCommand
+                .filter { it is GameEvent.RoundEnded }
+                .map { it as GameEvent.RoundEnded }
+                .collect { gameRoom.update { it?.copy(state = GameState.ROUND_ENDING) } }
+
+            // Game over
+            webSocketClient.incomingCommand
+                .filter { it is GameEvent.GameEnded }
+                .map { it as GameEvent.GameEnded }
+                .collect { gameRoom.update { it?.copy(state = GameState.GAME_OVER) } }
         }
     }
 
-    override suspend fun findMatch(playerId: String, gameMode: GameMode) {
+    override suspend fun joinMatchmaking(playerId: String, gameMode: GameMode) {
         webSocketClient.sendCommand(
             message = GameCommand.JoinQueue(
                 playerId = playerId,
@@ -61,44 +126,42 @@ class GameRepositoryImpl(
         )
     }
 
-    override suspend fun cancelMatchmaking() {
-        gameState.value = null
+    override suspend fun cancelMatchmaking(playerId: String) {
+        gameRoom.value = null
+        webSocketClient.sendCommand(
+            message = GameCommand.LeaveQueue(playerId)
+        )
     }
 
-    override suspend fun joinGame(gameId: String): Result<GameRoom> {
-        // In a real app, would connect to an existing game
-        val currentGame = gameState.value ?: return Result.failure(Exception("Game not found"))
-        return Result.success(currentGame)
+    override suspend fun leaveGame(playerId: String) {
+        gameRoom.value = null
     }
 
-    override suspend fun leaveGame() {
-        gameState.value = null
-    }
-
-    override suspend fun submitWord(gameId: String, word: String): Result<Int> {
-        // Mock word validation and scoring
-        val points = word.length * 2
-
-        // Update player score in game state
-        val currentGame = gameState.value ?: return Result.failure(Exception("Game not found"))
-        val updatedPlayers = currentGame.gamePlayers.map { player ->
-            if (player.isActive) {
-                player.copy(score = player.score + points)
-            } else {
-                player
-            }
-        }
-
-        gameState.value = currentGame.copy(gamePlayers = updatedPlayers)
-
-        return Result.success(points)
+    override suspend fun submitWord(
+        playerId: String,
+        gameId: String,
+        roundId: String,
+        word: String
+    ) {
+        webSocketClient.sendCommand(
+            message = GameCommand.SubmitWord(
+                playerId = playerId,
+                gameId = gameId,
+                roundId = roundId,
+                word = word
+            )
+        )
     }
 
     override fun observeGameState(gameId: String): Flow<GameState> {
-        return gameState.map { it?.state ?: GameState.IN_PROGRESS }
+        return gameRoom.map { it?.state ?: GameState.IN_PROGRESS }
     }
 
     override fun observePlayers(gameId: String): Flow<List<GamePlayer>> {
-        return gameState.map { it?.gamePlayers ?: emptyList() }
+        return gameRoom.map { it?.gamePlayers ?: emptyList() }
+    }
+
+    override fun observeChatRoom(gameId: String): Flow<List<Chat>> {
+        return chatRoom.map { it }
     }
 }

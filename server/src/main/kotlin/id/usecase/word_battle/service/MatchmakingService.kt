@@ -48,16 +48,6 @@ class MatchmakingService(
         startPeriodicMatchmaking()
     }
 
-    suspend fun getQueueStatus(playerId: String, gameMode: GameMode) : Int {
-        return mutex.withLock {
-            // Get queue for game mode
-            val queue = queues[gameMode] ?: return@withLock -1
-
-            // Return position (1-based index for user-friendliness)
-            queue.indexOf(playerId) + 1
-        }
-    }
-
     /**
      * Add a player to the matchmaking queue for a specific game mode
      * @return Position in queue
@@ -200,12 +190,5 @@ class MatchmakingService(
                 delay(Timing.ROUND_TRANSITION_SECONDS * 1_000L)
             }
         }
-    }
-
-    /**
-     * Get the current queue size for a game mode
-     */
-    fun getQueueSize(gameMode: GameMode): Int {
-        return queues[gameMode]?.size ?: 0
     }
 }

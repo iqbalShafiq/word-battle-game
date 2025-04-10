@@ -104,11 +104,10 @@ class WebSocketController : KoinComponent {
             when (command) {
                 is GameCommand.JoinQueue -> handleJoinQueue(command)
                 is GameCommand.LeaveQueue -> handleLeaveQueue(command)
-                is GameCommand.Ready -> handlePlayerReady(command)
                 is GameCommand.SubmitWord -> handleSubmitWord(command)
                 is GameCommand.EndRound -> handleEndRound(command)
                 is GameCommand.ChatMessage -> handleChatMessage(command)
-                is GameCommand.Disconnect -> handleRequestedDisconnect(command)
+                is GameCommand.LeaveGame -> handleRequestedDisconnect(command)
             }
         }
     }
@@ -138,14 +137,6 @@ class WebSocketController : KoinComponent {
      */
     private suspend fun handleLeaveQueue(command: GameCommand.LeaveQueue) {
         matchmakingService.removePlayerFromQueue(command.playerId)
-    }
-
-    /**
-     * Handle player ready status
-     */
-    private suspend fun handlePlayerReady(command: GameCommand.Ready) {
-        // Mark player as ready in the game
-        gameService.setPlayerReady(command.playerId)
     }
 
     /**
@@ -217,7 +208,7 @@ class WebSocketController : KoinComponent {
     /**
      * Handle explicit disconnect request
      */
-    private suspend fun handleRequestedDisconnect(command: GameCommand.Disconnect) {
+    private suspend fun handleRequestedDisconnect(command: GameCommand.LeaveGame) {
         handleDisconnect(command.playerId)
     }
 

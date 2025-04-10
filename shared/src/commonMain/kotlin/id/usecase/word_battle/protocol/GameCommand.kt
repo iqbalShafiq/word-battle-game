@@ -27,13 +27,6 @@ sealed class GameCommand {
     data class LeaveQueue(val playerId: String) : GameCommand()
 
     /**
-     * Mark player as ready to start the game
-     */
-    @Serializable
-    @SerialName("Ready")
-    data class Ready(val playerId: String) : GameCommand()
-
-    /**
      * Submit a word during a round
      */
     @Serializable
@@ -71,6 +64,6 @@ sealed class GameCommand {
      * Disconnect from the game
      */
     @Serializable
-    @SerialName("Disconnect")
-    data class Disconnect(val playerId: String) : GameCommand()
+    @SerialName("LeaveGame")
+    data class LeaveGame(val playerId: String) : GameCommand()
 }

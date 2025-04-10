@@ -76,7 +76,7 @@ class LobbyViewModel(
         }
 
         try {
-            val result = gameRepository.findMatch()
+            val result = gameRepository.joinMatchmaking()
             result.onSuccess { gameId ->
                 searchTimerJob?.cancel()
                 sendEffect(LobbyEffect.GameFound(gameId))
