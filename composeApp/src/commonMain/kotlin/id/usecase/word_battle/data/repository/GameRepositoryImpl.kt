@@ -154,8 +154,8 @@ class GameRepositoryImpl(
         )
     }
 
-    override fun observeGameState(): Flow<GameState> {
-        return gameRoom.map { it?.state ?: GameState.IN_PROGRESS }
+    override fun observeGameState(): Flow<GameRoom> {
+        return gameRoom.map { it as GameRoom }
     }
 
     override fun observePlayers(): Flow<List<GamePlayer>> {

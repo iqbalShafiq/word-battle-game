@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import id.usecase.word_battle.domain.repository.AuthRepository
 import id.usecase.word_battle.domain.repository.GameRepository
 import id.usecase.word_battle.models.GameMode
+import id.usecase.word_battle.models.GameState
 import id.usecase.word_battle.mvi.MviViewModel
 import id.usecase.word_battle.network.ConnectionStatus
 import id.usecase.word_battle.network.GameWebSocketClient
@@ -70,11 +71,9 @@ class LobbyViewModel(
 
         // Monitor game room updates
         wsGameRoomJob = viewModelScope.launch {
-            gameRepository.ob.collectLatest { gameRoom ->
-                gameRoom?.let {
-                    if (it.state == GameState.STARTING) {
-                        sendEffect(LobbyEffect.GameFound(it.id))
-                    }
+            gameRepository.observeGameState().collectLatest { gameRoom ->
+                if (gameRoom.state == GameState.STARTING) {
+                    sendEffect(LobbyEffect.GameFound(gameRoom.id))
                 }
             }
         }

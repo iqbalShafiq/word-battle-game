@@ -3,6 +3,7 @@ package id.usecase.word_battle.domain.repository
 import id.usecase.word_battle.domain.model.Chat
 import id.usecase.word_battle.models.GameMode
 import id.usecase.word_battle.models.GamePlayer
+import id.usecase.word_battle.models.GameRoom
 import id.usecase.word_battle.models.GameState
 import kotlinx.coroutines.flow.Flow
 
@@ -38,7 +39,7 @@ interface GameRepository {
     /**
      * Observe game state changes
      */
-    fun observeGameState(): Flow<GameState>
+    fun observeGameState(): Flow<GameRoom>
 
     /**
      * Observe players in current game
