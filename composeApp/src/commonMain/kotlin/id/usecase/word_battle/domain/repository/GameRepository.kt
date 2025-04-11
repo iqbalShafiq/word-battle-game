@@ -38,15 +38,15 @@ interface GameRepository {
     /**
      * Observe game state changes
      */
-    fun observeGameState(gameId: String): Flow<GameState>
+    fun observeGameState(): Flow<GameState>
 
     /**
      * Observe players in current game
      */
-    fun observePlayers(gameId: String): Flow<List<GamePlayer>>
+    fun observePlayers(): Flow<List<GamePlayer>>
 
     /**
      * Observe chat messages in current game
      */
-    fun observeChatRoom(gameId: String): Flow<List<Chat>>
+    fun observeChatRoom(): Flow<List<Chat>>
 }

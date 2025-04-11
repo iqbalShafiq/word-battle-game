@@ -6,6 +6,7 @@ import id.usecase.word_battle.models.GameMode
 import id.usecase.word_battle.models.GamePlayer
 import id.usecase.word_battle.models.GameRoom
 import id.usecase.word_battle.models.GameState
+import id.usecase.word_battle.models.Lobby
 import id.usecase.word_battle.network.GameWebSocketClient
 import id.usecase.word_battle.protocol.GameCommand
 import id.usecase.word_battle.protocol.GameEvent
@@ -22,7 +23,7 @@ class GameRepositoryImpl(
     scope: CoroutineScope
 ) : GameRepository {
 
-    private val waitingEstimation = MutableStateFlow(0)
+    private val lobby = MutableStateFlow<Lobby?>(null)
     private val gameRoom = MutableStateFlow<GameRoom?>(null)
     private val chatRoom = MutableStateFlow<List<Chat>>(emptyList())
 
@@ -33,7 +34,7 @@ class GameRepositoryImpl(
                 .filter { it is GameEvent.QueueJoined }
                 .map { it as GameEvent.QueueJoined }
                 .collect { queue ->
-                    waitingEstimation.update { queue.estimatedWaitTime }
+                    lobby.update { Lobby(estimatedTime = queue.estimatedWaitTime) }
                 }
 
             // Game has created
@@ -153,15 +154,15 @@ class GameRepositoryImpl(
         )
     }
 
-    override fun observeGameState(gameId: String): Flow<GameState> {
+    override fun observeGameState(): Flow<GameState> {
         return gameRoom.map { it?.state ?: GameState.IN_PROGRESS }
     }
 
-    override fun observePlayers(gameId: String): Flow<List<GamePlayer>> {
+    override fun observePlayers(): Flow<List<GamePlayer>> {
         return gameRoom.map { it?.gamePlayers ?: emptyList() }
     }
 
-    override fun observeChatRoom(gameId: String): Flow<List<Chat>> {
+    override fun observeChatRoom(): Flow<List<Chat>> {
         return chatRoom.map { it }
     }
 }
