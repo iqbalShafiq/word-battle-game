@@ -64,12 +64,11 @@ class WebSocketController : KoinComponent {
                     else -> continue
                 }
             }
-        } catch (e: ClosedReceiveChannelException) {
+        } catch (_: ClosedReceiveChannelException) {
             logger.info("WebSocket connection for player $playerId closed")
         } catch (e: Exception) {
             logger.error("Error in WebSocket connection for player $playerId: ${e.message}")
         } finally {
-            // Clean up
             handleDisconnect(playerId)
         }
     }

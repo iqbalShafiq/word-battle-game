@@ -5,11 +5,11 @@ import id.usecase.word_battle.domain.repository.GameRepository
 import id.usecase.word_battle.models.GameMode
 import id.usecase.word_battle.models.GamePlayer
 import id.usecase.word_battle.models.GameRoom
-import id.usecase.word_battle.models.GameState
 import id.usecase.word_battle.models.Lobby
 import id.usecase.word_battle.network.GameWebSocketClient
 import id.usecase.word_battle.protocol.GameCommand
 import id.usecase.word_battle.protocol.GameEvent
+import id.usecase.word_battle.protocol.GameStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,7 +45,7 @@ class GameRepositoryImpl(
                     GameRoom(
                         id = event.gameId,
                         gamePlayers = event.players,
-                        state = GameState.STARTING
+                        state = GameStatus.GAME_CREATED
                     )
                 }
                 .collect { game ->
@@ -66,6 +66,7 @@ class GameRepositoryImpl(
                     gameRoom.update {
                         it?.copy(
                             currentRound = round.round.roundNumber,
+                            currentRoundId = round.round.id,
                             currentLetters = round.round.letters
                         )
                     }
@@ -108,13 +109,13 @@ class GameRepositoryImpl(
             webSocketClient.incomingCommand
                 .filter { it is GameEvent.RoundEnded }
                 .map { it as GameEvent.RoundEnded }
-                .collect { gameRoom.update { it?.copy(state = GameState.ROUND_ENDING) } }
+                .collect { gameRoom.update { it?.copy(state = GameStatus.ROUND_OVER) } }
 
             // Game over
             webSocketClient.incomingCommand
                 .filter { it is GameEvent.GameEnded }
                 .map { it as GameEvent.GameEnded }
-                .collect { gameRoom.update { it?.copy(state = GameState.GAME_OVER) } }
+                .collect { gameRoom.update { it?.copy(state = GameStatus.GAME_OVER) } }
         }
     }
 
@@ -154,12 +155,8 @@ class GameRepositoryImpl(
         )
     }
 
-    override fun observeGameState(): Flow<GameRoom> {
+    override fun observeGameRoom(): Flow<GameRoom> {
         return gameRoom.map { it as GameRoom }
-    }
-
-    override fun observePlayers(): Flow<List<GamePlayer>> {
-        return gameRoom.map { it?.gamePlayers ?: emptyList() }
     }
 
     override fun observeChatRoom(): Flow<List<Chat>> {

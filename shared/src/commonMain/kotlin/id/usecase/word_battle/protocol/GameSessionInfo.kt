@@ -23,12 +23,11 @@ data class GameSessionInfo(
  */
 @Serializable
 enum class GameStatus {
-    WAITING_FOR_PLAYERS,
-    READY_TO_START,
-    IN_PROGRESS,
-    ROUND_ENDING,
-    COMPLETED,
-    CANCELED
+    WAITING,
+    GAME_CREATED,
+    ROUND_ACTIVE,
+    ROUND_OVER,
+    GAME_OVER
 }
 
 /**

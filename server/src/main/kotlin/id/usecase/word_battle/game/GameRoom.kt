@@ -28,7 +28,7 @@ class GameRoom(
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     // Game state
-    var status: GameStatus = GameStatus.WAITING_FOR_PLAYERS
+    var status: GameStatus = GameStatus.WAITING
         private set
 
     var currentRoundId: String? = null
@@ -55,7 +55,7 @@ class GameRoom(
      * Start the game
      */
     suspend fun start() {
-        if (status != GameStatus.WAITING_FOR_PLAYERS) {
+        if (status != GameStatus.WAITING) {
             logger.warn("Cannot start game $gameId: not in waiting state")
             return
         }
@@ -65,7 +65,7 @@ class GameRoom(
             return
         }
 
-        status = GameStatus.IN_PROGRESS
+        status = GameStatus.ROUND_ACTIVE
         updateLastActivity()
 
         // Start first round
@@ -82,7 +82,7 @@ class GameRoom(
         updateLastActivity()
 
         // Check if all players are ready
-        if (readyPlayers.size == playerIds.size && status == GameStatus.WAITING_FOR_PLAYERS) {
+        if (readyPlayers.size == playerIds.size && status == GameStatus.WAITING) {
             // Start after a short delay
             scope.launch {
                 delay(1000)
@@ -111,7 +111,7 @@ class GameRoom(
         }
 
         currentRoundId = round.id
-        status = GameStatus.IN_PROGRESS
+        status = GameStatus.ROUND_ACTIVE
         updateLastActivity()
 
         // Convert to shared model and notify players
@@ -136,7 +136,7 @@ class GameRoom(
      * Submit a word during the current round
      */
     suspend fun submitWord(playerId: String, word: String): WordSubmissionResponse {
-        if (status != GameStatus.IN_PROGRESS || currentRoundId == null) {
+        if (status != GameStatus.ROUND_ACTIVE || currentRoundId == null) {
             return WordSubmissionResponse(
                 success = false,
                 isValid = false,
@@ -158,7 +158,7 @@ class GameRoom(
         val roundId = currentRoundId!!
 
         // Change status
-        status = GameStatus.ROUND_ENDING
+        status = GameStatus.ROUND_OVER
         updateLastActivity()
 
         // Let the game service handle round end logic
@@ -179,7 +179,7 @@ class GameRoom(
      * End the game
      */
     private suspend fun endGame(reason: String) {
-        status = GameStatus.COMPLETED
+        status = GameStatus.GAME_OVER
         updateLastActivity()
 
         // Cancel any active jobs
@@ -214,7 +214,7 @@ class GameRoom(
         updateLastActivity()
 
         // If not enough players, end the game
-        if (playerIds.size < 2 && status != GameStatus.COMPLETED) {
+        if (playerIds.size < 2 && status != GameStatus.GAME_OVER) {
             endGame("Not enough players")
         }
     }

@@ -4,10 +4,10 @@ import androidx.lifecycle.viewModelScope
 import id.usecase.word_battle.domain.repository.AuthRepository
 import id.usecase.word_battle.domain.repository.GameRepository
 import id.usecase.word_battle.models.GameMode
-import id.usecase.word_battle.models.GameState
 import id.usecase.word_battle.mvi.MviViewModel
 import id.usecase.word_battle.network.ConnectionStatus
 import id.usecase.word_battle.network.GameWebSocketClient
+import id.usecase.word_battle.protocol.GameStatus
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -71,8 +71,8 @@ class LobbyViewModel(
 
         // Monitor game room updates
         wsGameRoomJob = viewModelScope.launch {
-            gameRepository.observeGameState().collectLatest { gameRoom ->
-                if (gameRoom.state == GameState.STARTING) {
+            gameRepository.observeGameRoom().collectLatest { gameRoom ->
+                if (gameRoom.state == GameStatus.GAME_CREATED) {
                     sendEffect(LobbyEffect.GameFound(gameRoom.id))
                 }
             }
@@ -123,7 +123,10 @@ class LobbyViewModel(
         }
 
         try {
-            gameRepository.joinMatchmaking(playerId = state.value.playerId, gameMode = GameMode.CLASSIC)
+            gameRepository.joinMatchmaking(
+                playerId = state.value.playerId,
+                gameMode = GameMode.CLASSIC
+            )
 
 //            result.onSuccess { gameId ->
 //                searchTimerJob?.cancel()

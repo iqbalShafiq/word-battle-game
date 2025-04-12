@@ -2,8 +2,8 @@ package id.usecase.word_battle.data.mapper
 
 import id.usecase.word_battle.models.GamePlayer
 import id.usecase.word_battle.models.GameRoom
-import id.usecase.word_battle.models.GameState
 import id.usecase.word_battle.models.UserProfile
+import id.usecase.word_battle.protocol.GameStatus
 import id.usecase.word_battle.ui.models.GameStatusUi
 import id.usecase.word_battle.ui.models.GameUi
 import id.usecase.word_battle.ui.models.PlayerUi
@@ -32,13 +32,13 @@ fun GamePlayer.toUiModel(isCurrentPlayer: Boolean = false): PlayerUi {
     )
 }
 
-fun GameState.toUiModel(): GameStatusUi {
+fun GameStatus.toUiModel(): GameStatusUi {
     return when (this) {
-        GameState.IN_PROGRESS -> GameStatusUi.WAITING
-        GameState.WAITING_FOR_PLAYERS -> GameStatusUi.WAITING_FOR_PLAYERS
-        GameState.STARTING -> GameStatusUi.STARTING
-        GameState.ROUND_ENDING -> GameStatusUi.ROUND_END
-        GameState.GAME_OVER -> GameStatusUi.FINISHED
+        GameStatus.ROUND_ACTIVE -> GameStatusUi.WAITING
+        GameStatus.WAITING -> GameStatusUi.WAITING_FOR_PLAYERS
+        GameStatus.GAME_CREATED -> GameStatusUi.STARTING
+        GameStatus.ROUND_OVER -> GameStatusUi.ROUND_END
+        GameStatus.GAME_OVER -> GameStatusUi.FINISHED
     }
 }
 
