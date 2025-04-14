@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    kotlin("plugin.serialization") version "2.1.20"
 }
 
 kotlin {
@@ -22,6 +23,7 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            implementation(libs.androidx.lifecycle.process)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(projects.shared)
@@ -29,9 +31,14 @@ kotlin {
             // Ktor for networking
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.websockets)
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.serialization.kotlinx.json)
+
+            // Connectivity Manager
+            implementation(libs.connectivity.core)
+            implementation(libs.connectivity.compose.device)
 
             // Koin for DI
             implementation(libs.koin.core)
@@ -52,6 +59,7 @@ kotlin {
 
             // Ktor Android
             implementation(libs.ktor.client.android)
+            implementation(libs.ktor.client.cio)
 
             // Koin Android
             implementation(libs.koin.android)

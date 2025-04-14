@@ -89,11 +89,11 @@ class LoginViewModel(
         updateState { copy(isLoading = true) }
 
         try {
-            // In a real app, we would use authRepository.login()
-            // For now, we'll simulate a network call
-            delay(1000) // Simulate network delay
-
-            // For demo purposes, always succeed login
+            val response = authRepository.login(
+                username = state.value.username,
+                password = state.value.password
+            )
+            if (response.isFailure) throw Exception("Auth failed")
             sendEffect(LoginEffect.NavigateToHome)
         } catch (e: Exception) {
             sendEffect(LoginEffect.ShowError(e.message ?: "Login failed"))

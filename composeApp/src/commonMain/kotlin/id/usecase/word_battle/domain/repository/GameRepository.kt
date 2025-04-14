@@ -4,6 +4,7 @@ import id.usecase.word_battle.domain.model.Chat
 import id.usecase.word_battle.models.GameMode
 import id.usecase.word_battle.models.GamePlayer
 import id.usecase.word_battle.models.GameRoom
+import id.usecase.word_battle.models.Lobby
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -36,9 +37,14 @@ interface GameRepository {
     )
 
     /**
+     * Observe lobby state changes
+     */
+    fun observeLobby(): Flow<Lobby?>
+
+    /**
      * Observe game state changes
      */
-    fun observeGameRoom(): Flow<GameRoom>
+    fun observeGameRoom(): Flow<GameRoom?>
 
     /**
      * Observe chat messages in current game

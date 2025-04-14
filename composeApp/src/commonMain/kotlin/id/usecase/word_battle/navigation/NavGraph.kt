@@ -89,9 +89,12 @@ fun NavGraph(navController: NavHostController) {
         composable<Game> { backStackEntry ->
             val gameRoom: Game = backStackEntry.toRoute()
             val gameId = gameRoom.gameId
-            GameScreen(gameId = gameId) {
-                navController.popBackStack(Home, false)
-            }
+            GameScreen(
+                gameId = gameId,
+                onGameFinished = {
+                    navController.popBackStack(Home, false)
+                }
+            )
         }
 
         composable<Profile> {

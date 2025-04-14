@@ -10,6 +10,7 @@ data class GameRoom(
     val state: GameStatus,
     val currentRound: Int = 0,
     val currentRoundId: String = "",
+    val remainingRoundTime: Int = 60,
     val maxRounds: Int = 10,
     val currentLetters: String = ""
 )

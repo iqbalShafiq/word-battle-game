@@ -1,25 +1,25 @@
 package id.usecase.word_battle.data.repository
 
+import id.usecase.word_battle.PlatformLogger
 import id.usecase.word_battle.domain.model.Chat
 import id.usecase.word_battle.domain.repository.GameRepository
 import id.usecase.word_battle.models.GameMode
-import id.usecase.word_battle.models.GamePlayer
 import id.usecase.word_battle.models.GameRoom
 import id.usecase.word_battle.models.Lobby
-import id.usecase.word_battle.network.GameWebSocketClient
+import id.usecase.word_battle.network.WebSocketManager
 import id.usecase.word_battle.protocol.GameCommand
 import id.usecase.word_battle.protocol.GameEvent
 import id.usecase.word_battle.protocol.GameStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class GameRepositoryImpl(
-    private val webSocketClient: GameWebSocketClient,
+    private val webSocketManager: WebSocketManager,
     scope: CoroutineScope
 ) : GameRepository {
 
@@ -29,98 +29,92 @@ class GameRepositoryImpl(
 
     init {
         scope.launch {
-            // Player joined the queue
-            webSocketClient.incomingCommand
-                .filter { it is GameEvent.QueueJoined }
-                .map { it as GameEvent.QueueJoined }
-                .collect { queue ->
-                    lobby.update { Lobby(estimatedTime = queue.estimatedWaitTime) }
-                }
+            webSocketManager
+                .getIncomingMessages()
+                ?.collectLatest { event ->
+                    when (event) {
+                        // error handling soon
+                        is GameEvent.Error -> TODO()
 
-            // Game has created
-            webSocketClient.incomingCommand
-                .filter { it is GameEvent.GameCreated }
-                .map {
-                    val event = it as GameEvent.GameCreated
-                    GameRoom(
-                        id = event.gameId,
-                        gamePlayers = event.players,
-                        state = GameStatus.GAME_CREATED
-                    )
-                }
-                .collect { game ->
-                    gameRoom.update {
-                        GameRoom(
-                            id = game.id,
-                            gamePlayers = game.gamePlayers,
-                            state = game.state
-                        )
-                    }
-                }
+                        // Player joined the queue
+                        is GameEvent.QueueJoined -> {
+                            lobby.update { Lobby(estimatedTime = event.estimatedWaitTime) }
+                        }
 
-            // New round has started
-            webSocketClient.incomingCommand
-                .filter { it is GameEvent.RoundStarted }
-                .map { it as GameEvent.RoundStarted }
-                .collect { round ->
-                    gameRoom.update {
-                        it?.copy(
-                            currentRound = round.round.roundNumber,
-                            currentRoundId = round.round.id,
-                            currentLetters = round.round.letters
-                        )
-                    }
-                }
+                        // Game has created
+                        is GameEvent.GameCreated -> {
+                            val game = GameRoom(
+                                id = event.gameId,
+                                gamePlayers = event.players,
+                                state = GameStatus.GAME_CREATED
+                            )
 
-            // Chat message received
-            webSocketClient.incomingCommand
-                .filter { it is GameEvent.ChatReceived }
-                .map {
-                    val receivedChat = it as GameEvent.ChatReceived
-                    Chat(
-                        playerId = receivedChat.playerId,
-                        message = receivedChat.message,
-                        timestamp = receivedChat.timestamp
-                    )
-                }
-                .collect { chat -> chatRoom.update { it + chat } }
-
-            // Player score updated
-            webSocketClient.incomingCommand
-                .filter { it is GameEvent.WordResult }
-                .map { it as GameEvent.WordResult }
-                .collect { result ->
-                    gameRoom.update {
-                        it?.copy(
-                            gamePlayers = it.gamePlayers.map { player ->
-                                if (player.id == result.playerId) {
-                                    player.copy(
-                                        score = player.score + result.score
-                                    )
-                                } else {
-                                    player
-                                }
+                            gameRoom.update {
+                                GameRoom(
+                                    id = game.id,
+                                    gamePlayers = game.gamePlayers,
+                                    state = game.state
+                                )
                             }
-                        )
+                        }
+
+                        // New round has started
+                        is GameEvent.RoundStarted -> {
+                            gameRoom.update {
+                                it?.copy(
+                                    currentRound = event.round.roundNumber,
+                                    currentRoundId = event.round.id,
+                                    currentLetters = event.round.letters,
+                                    remainingRoundTime = 60
+                                )
+                            }
+                        }
+
+                        // Chat message received
+                        is GameEvent.ChatReceived -> {
+                            val receivedChat = Chat(
+                                playerId = event.playerId,
+                                message = event.message,
+                                timestamp = event.timestamp
+                            )
+
+                            chatRoom.update { it + receivedChat }
+                        }
+
+                        // Player score updated
+                        is GameEvent.WordResult -> {
+                            gameRoom.update {
+                                it?.copy(
+                                    gamePlayers = it.gamePlayers.map { player ->
+                                        if (player.id == event.playerId) {
+                                            player.copy(
+                                                score = player.score + event.score
+                                            )
+                                        } else {
+                                            player
+                                        }
+                                    }
+                                )
+                            }
+                        }
+
+                        // Round ended
+                        is GameEvent.RoundEnded -> {
+                            gameRoom.update { it?.copy(state = GameStatus.ROUND_OVER) }
+                        }
+
+                        // Game over
+                        is GameEvent.GameEnded -> {
+                            gameRoom.update { it?.copy(state = GameStatus.GAME_OVER) }
+                        }
                     }
                 }
-
-            // Round ended
-            webSocketClient.incomingCommand
-                .filter { it is GameEvent.RoundEnded }
-                .map { it as GameEvent.RoundEnded }
-                .collect { gameRoom.update { it?.copy(state = GameStatus.ROUND_OVER) } }
-
-            // Game over
-            webSocketClient.incomingCommand
-                .filter { it is GameEvent.GameEnded }
-                .map { it as GameEvent.GameEnded }
-                .collect { gameRoom.update { it?.copy(state = GameStatus.GAME_OVER) } }
         }
     }
 
     override suspend fun joinMatchmaking(playerId: String, gameMode: GameMode) {
-        webSocketClient.sendCommand(
+        webSocketManager.connect()
+        webSocketManager.sendCommand(
             message = GameCommand.JoinQueue(
                 playerId = playerId,
                 gameMode = gameMode
@@ -130,7 +124,7 @@ class GameRepositoryImpl(
 
     override suspend fun cancelMatchmaking(playerId: String) {
         gameRoom.value = null
-        webSocketClient.sendCommand(
+        webSocketManager.sendCommand(
             message = GameCommand.LeaveQueue(playerId)
         )
     }
@@ -145,7 +139,7 @@ class GameRepositoryImpl(
         roundId: String,
         word: String
     ) {
-        webSocketClient.sendCommand(
+        webSocketManager.sendCommand(
             message = GameCommand.SubmitWord(
                 playerId = playerId,
                 gameId = gameId,
@@ -155,8 +149,12 @@ class GameRepositoryImpl(
         )
     }
 
-    override fun observeGameRoom(): Flow<GameRoom> {
-        return gameRoom.map { it as GameRoom }
+    override fun observeLobby(): Flow<Lobby?> {
+        return lobby.map { it }
+    }
+
+    override fun observeGameRoom(): Flow<GameRoom?> {
+        return gameRoom.map { it }
     }
 
     override fun observeChatRoom(): Flow<List<Chat>> {

@@ -5,9 +5,9 @@ import id.usecase.word_battle.domain.repository.AuthRepository
 import id.usecase.word_battle.domain.repository.GameRepository
 import id.usecase.word_battle.models.GameMode
 import id.usecase.word_battle.mvi.MviViewModel
-import id.usecase.word_battle.network.ConnectionStatus
-import id.usecase.word_battle.network.GameWebSocketClient
+import id.usecase.word_battle.network.WebSocketManager
 import id.usecase.word_battle.protocol.GameStatus
+import id.usecase.word_battle.service.GameWebSocketService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 data class LobbyState(
     val isSearching: Boolean = false,
     val searchTimeSeconds: Int = 0,
-    val connectionStatus: ConnectionStatus = ConnectionStatus.DISCONNECTED,
+    val connectionStatus: GameWebSocketService.ConnectionState = GameWebSocketService.ConnectionState.DISCONNECTED,
     val playerId: String = "",
 )
 
@@ -47,7 +47,7 @@ sealed class LobbyEffect {
 class LobbyViewModel(
     private val authRepository: AuthRepository,
     private val gameRepository: GameRepository,
-    private val webSocketClient: GameWebSocketClient
+    private val webSocketClient: WebSocketManager
 ) : MviViewModel<LobbyIntent, LobbyState, LobbyEffect>(LobbyState()) {
 
     private var searchTimerJob: Job? = null
@@ -64,7 +64,7 @@ class LobbyViewModel(
 
         // Monitor WebSocket connection status
         wsConnectionJob = viewModelScope.launch {
-            webSocketClient.connectionStatus.collectLatest { status ->
+            webSocketClient.getConnectionState()?.collectLatest { status ->
                 updateState { copy(connectionStatus = status) }
             }
         }
@@ -72,7 +72,7 @@ class LobbyViewModel(
         // Monitor game room updates
         wsGameRoomJob = viewModelScope.launch {
             gameRepository.observeGameRoom().collectLatest { gameRoom ->
-                if (gameRoom.state == GameStatus.GAME_CREATED) {
+                if (gameRoom?.state == GameStatus.GAME_CREATED) {
                     sendEffect(LobbyEffect.GameFound(gameRoom.id))
                 }
             }
@@ -100,7 +100,7 @@ class LobbyViewModel(
         if (state.value.isSearching) return
 
         // If WebSocket not connected, connect it first
-        if (state.value.connectionStatus != ConnectionStatus.CONNECTED) {
+        if (state.value.connectionStatus != GameWebSocketService.ConnectionState.CONNECTED) {
             try {
                 webSocketClient.connect()
             } catch (_: Exception) {
@@ -127,14 +127,6 @@ class LobbyViewModel(
                 playerId = state.value.playerId,
                 gameMode = GameMode.CLASSIC
             )
-
-//            result.onSuccess { gameId ->
-//                searchTimerJob?.cancel()
-//                sendEffect(LobbyEffect.GameFound(gameId))
-//            }.onFailure { error ->
-//                updateState { copy(isSearching = false) }
-//                sendEffect(LobbyEffect.ShowError(error.message ?: "Failed to find match"))
-//            }
         } catch (e: Exception) {
             updateState { copy(isSearching = false) }
             sendEffect(LobbyEffect.ShowError(e.message ?: "Failed to find match"))

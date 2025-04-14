@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -35,36 +36,34 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import id.usecase.word_battle.protocol.GameStatus
 import id.usecase.word_battle.ui.components.CountdownTimer
 import id.usecase.word_battle.ui.components.ErrorState
 import id.usecase.word_battle.ui.components.FullScreenLoading
+import id.usecase.word_battle.ui.components.GameKeyboard
 import id.usecase.word_battle.ui.components.GameResultDialog
 import id.usecase.word_battle.ui.components.LetterCard
-import id.usecase.word_battle.ui.components.PrimaryButton
 import id.usecase.word_battle.ui.components.StandardCard
 import id.usecase.word_battle.ui.components.TimerBar
 import id.usecase.word_battle.ui.components.WordDisplay
-import id.usecase.word_battle.ui.components.WordInputField
-import org.koin.androidx.compose.getViewModel
-import org.koin.core.parameter.parametersOf
+import id.usecase.word_battle.ui.theme.WordBattleTheme
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameScreen(
     gameId: String,
     onGameFinished: () -> Unit,
-    viewModel: GameViewModel = getViewModel { parametersOf(gameId) }
+    viewModel: GameViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val haptic = LocalHapticFeedback.current
-    val context = LocalContext.current
 
     // Display game result dialog when game is finished
     var showGameResultDialog by remember { mutableStateOf(false) }
@@ -97,12 +96,12 @@ fun GameScreen(
     // Handle round transitions
     LaunchedEffect(key1 = state.gameState) {
         when (state.gameState) {
-            GameStatus.ROUND_END -> {
+            GameStatus.ROUND_OVER -> {
                 // Play round end sound
                 // You could add a sound player here
             }
 
-            GameStatus.FINISHED -> {
+            GameStatus.GAME_OVER -> {
                 showGameResultDialog = true
             }
 
@@ -160,7 +159,7 @@ fun GameScreen(
             }
 
             // Round start countdown
-            if (state.gameState == GameStatus.STARTING) {
+            if (state.gameState == GameStatus.GAME_CREATED) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -187,8 +186,8 @@ fun GameScreen(
 
             // Game result dialog
             if (showGameResultDialog) {
-                val currentPlayer = state.players.find { it.isCurrentPlayer }
-                val opponent = state.players.find { !it.isCurrentPlayer }
+                val currentPlayer = state.players.find { it.id == state.playerId }
+                val opponent = state.players.find { it.id != state.playerId }
                 val isWinner =
                     currentPlayer != null && opponent != null && currentPlayer.score > opponent.score
 
@@ -237,7 +236,7 @@ private fun GameContent(
                         .padding(vertical = 4.dp)
                 ) {
                     Text(
-                        text = if (player.isCurrentPlayer) "${player.username} (You)" else player.username,
+                        text = if (player.id == state.playerId) "${player.username} (You)" else player.username,
                         style = MaterialTheme.typography.bodyLarge
                     )
 
@@ -255,7 +254,7 @@ private fun GameContent(
         }
 
         // Timer
-        if (state.gameState == GameStatus.PLAYING) {
+        if (state.gameState == GameStatus.ROUND_ACTIVE) {
             TimerBar(
                 durationSeconds = state.roundTimeSeconds,
                 currentTimeSeconds = state.roundTimeRemaining,
@@ -265,7 +264,7 @@ private fun GameContent(
 
         // Letters
         AnimatedVisibility(
-            visible = state.gameState == GameStatus.PLAYING,
+            visible = state.gameState == GameStatus.ROUND_ACTIVE,
             enter = fadeIn() + slideInVertically(
                 initialOffsetY = { it / 2 },
                 animationSpec = tween(durationMillis = 500)
@@ -297,21 +296,37 @@ private fun GameContent(
         }
 
         // Word input
-        if (state.gameState == GameStatus.PLAYING) {
+        if (state.gameState == GameStatus.ROUND_ACTIVE) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                WordInputField(
-                    value = state.currentWord,
-                    onValueChange = onWordChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    onSubmit = onSubmitWord
+                // Current word display
+                Text(
+                    text = state.currentWord.ifEmpty { "Type a word" },
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = if (state.currentWord.isEmpty())
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    else MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp)
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                PrimaryButton(
-                    text = "Submit Word",
-                    onClick = onSubmitWord,
-                    isEnabled = state.currentWord.length >= 3,
+                // On screen keyboard
+                GameKeyboard(
+                    availableLetters = state.roundLetters,
+                    onKeyPressed = { char ->
+                        onWordChange(state.currentWord + char)
+                    },
+                    onBackspace = {
+                        if (state.currentWord.isNotEmpty()) {
+                            onWordChange(state.currentWord.dropLast(1))
+                        }
+                    },
+                    onSubmit = {
+                        if (state.currentWord.length >= 3) {
+                            onSubmitWord()
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -340,5 +355,16 @@ private fun GameContent(
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun GameScreenPrev() {
+    WordBattleTheme {
+        GameScreen(
+            gameId = "gameId",
+            onGameFinished = {}
+        )
     }
 }

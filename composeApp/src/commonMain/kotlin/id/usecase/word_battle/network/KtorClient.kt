@@ -2,7 +2,7 @@ package id.usecase.word_battle.network
 
 import android.util.Log
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.android.Android
+import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -26,11 +26,11 @@ object KtorClient {
     private const val TAG = "KtorClient"
 
     // Base URL for API endpoints - update with your actual API URL
-    private const val BASE_URL = "https://api.wordbattle.usecase.id"
+    private const val BASE_URL = "http://192.168.11.41:8080/"
 
     // Create and configure Ktor HttpClient
     fun create(enableNetworkLogs: Boolean = true): HttpClient {
-        return HttpClient(Android) {
+        return HttpClient(CIO) {
             // Set up timeout
             install(HttpTimeout) {
                 requestTimeoutMillis = TIME_OUT

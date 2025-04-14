@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
  * Game screen state
  */
 data class GameUiState(
-    val gameId: String,
+    val gameId: String = "",
     val playerId: String = "",
     val players: List<GamePlayer> = emptyList(),
     val gameState: GameStatus = GameStatus.ROUND_ACTIVE,
@@ -56,10 +56,9 @@ sealed class GameEffect {
  * Game screen ViewModel with round management
  */
 class GameViewModel(
-    private val gameId: String,
     private val authRepository: AuthRepository,
     private val gameRepository: GameRepository
-) : MviViewModel<GameIntent, GameUiState, GameEffect>(GameUiState(gameId = gameId)) {
+) : MviViewModel<GameIntent, GameUiState, GameEffect>(GameUiState()) {
 
     private var roundTimerJob: Job? = null
 
@@ -138,17 +137,24 @@ class GameViewModel(
                 updateState { copy(errorMessage = e.message) }
             }
             .collectLatest { game ->
+                if (game == null) {
+                    updateState { copy(isLoading = false) }
+                    return@collectLatest
+                }
+
                 val oldStatus = state.value.gameState
                 val newStatus = game.state
 
                 updateState {
                     copy(
+                        gameId = game.id,
                         gameState = game.state,
                         players = game.gamePlayers,
                         currentRound = game.currentRound,
                         currentRoundId = game.currentRoundId,
                         maxRounds = game.maxRounds,
-                        roundLetters = game.currentLetters.map { it.toChar() }
+                        roundLetters = game.currentLetters.map { it.toChar() },
+                        roundTimeRemaining = game.remainingRoundTime
                     )
                 }
 
@@ -207,7 +213,7 @@ class GameViewModel(
         try {
             gameRepository.submitWord(
                 playerId = state.value.playerId,
-                gameId = gameId,
+                gameId = state.value.gameId,
                 roundId = state.value.currentRoundId,
                 word = word
             )

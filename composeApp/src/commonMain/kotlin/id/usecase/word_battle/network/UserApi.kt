@@ -20,7 +20,7 @@ class UserApi(
      * Get current user profile
      */
     suspend fun getCurrentUser(): UserProfile {
-        return httpClient.get("/user/me") {
+        return httpClient.get("/auth/profile") {
             tokenManager.addAuthHeader(this)
         }.body()
     }
