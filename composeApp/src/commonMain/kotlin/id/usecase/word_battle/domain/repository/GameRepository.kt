@@ -24,7 +24,7 @@ interface GameRepository {
     /**
      * Leave current game
      */
-    suspend fun leaveGame(playerId: String)
+    suspend fun leaveGame(playerId: String, gameId: String? = null)
 
     /**
      * Submit a word

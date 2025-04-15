@@ -79,8 +79,12 @@ class WebSocketController : KoinComponent {
     private suspend fun processTextFrame(frame: Frame.Text, playerId: String) {
         val text = frame.readText()
         try {
-            val message = Json.decodeFromString<WebSocketMessage>(text)
+            val json = Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+            }
 
+            val message = json.decodeFromString<WebSocketMessage>(text)
             if (message.type == MessageType.COMMAND) {
                 message.command?.let { handleCommand(it) }
             }
@@ -208,6 +212,7 @@ class WebSocketController : KoinComponent {
      * Handle explicit disconnect request
      */
     private suspend fun handleRequestedDisconnect(command: GameCommand.LeaveGame) {
+        if (command.gameId != null) gameService.endGame(command.gameId!!)
         handleDisconnect(command.playerId)
     }
 

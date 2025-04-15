@@ -65,5 +65,8 @@ sealed class GameCommand {
      */
     @Serializable
     @SerialName("LeaveGame")
-    data class LeaveGame(val playerId: String) : GameCommand()
+    data class LeaveGame(
+        val playerId: String,
+        val gameId: String? = null
+    ) : GameCommand()
 }

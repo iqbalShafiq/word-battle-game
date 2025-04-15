@@ -132,8 +132,8 @@ class GameRepositoryImpl(
         )
     }
 
-    override suspend fun leaveGame(playerId: String) {
-        webSocketManager.sendCommand(GameCommand.LeaveGame(playerId))
+    override suspend fun leaveGame(playerId: String, gameId: String?) {
+        webSocketManager.sendCommand(GameCommand.LeaveGame(playerId, gameId))
         gameRoom.value = null
     }
 

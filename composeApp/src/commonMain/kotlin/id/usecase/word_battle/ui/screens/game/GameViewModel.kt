@@ -80,7 +80,11 @@ class GameViewModel(
 
             is GameIntent.LeaveGame -> {
                 try {
-                    gameRepository.leaveGame(playerId = state.playerId)
+                    gameRepository.leaveGame(
+                        playerId = state.playerId,
+                        gameId = state.gameId
+                    )
+
                     sendEffect(GameEffect.LeftGame)
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -246,7 +250,10 @@ class GameViewModel(
         stopRoundTimer()
         viewModelScope.launch {
             try {
-                gameRepository.leaveGame(playerId = state.value.playerId)
+                gameRepository.leaveGame(
+                    playerId = state.value.playerId,
+                    gameId = state.value.gameId
+                )
             } catch (e: Exception) {
                 e.printStackTrace()
             }
