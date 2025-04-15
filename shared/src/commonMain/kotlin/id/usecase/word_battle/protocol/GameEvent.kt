@@ -65,7 +65,7 @@ sealed class GameEvent {
     data class RoundEnded(
         val gameId: String,
         val roundId: String,
-        val results: Map<String, Int>, // player ID to score
+        val results: Map<String, Int>,
         val winningWord: String,
         val winningPlayerId: String?
     ) : GameEvent()

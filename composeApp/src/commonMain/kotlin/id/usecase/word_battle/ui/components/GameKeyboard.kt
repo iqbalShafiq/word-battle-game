@@ -37,9 +37,9 @@ fun GameKeyboard(
     val haptic = LocalHapticFeedback.current
 
     val rows = listOf(
-        "QWERTYUIOP".toList(),
-        "ASDFGHJKL".toList(),
-        "ZXCVBNM".toList()
+        "qwertyuiop".toList(),
+        "asdfghjkl".toList(),
+        "zxcvbnm".toList()
     )
 
     Column(

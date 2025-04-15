@@ -49,6 +49,7 @@ sealed class GameIntent {
 sealed class GameEffect {
     object GameFinished : GameEffect()
     object WordSubmitted : GameEffect()
+    object LeftGame : GameEffect()
     data class ShowError(val message: String) : GameEffect()
 }
 
@@ -67,6 +68,7 @@ class GameViewModel(
         viewModelScope.launch {
             getCurrentUser()
             observeGameState()
+            observeErrorMessage()
         }
     }
 
@@ -79,6 +81,7 @@ class GameViewModel(
             is GameIntent.LeaveGame -> {
                 try {
                     gameRepository.leaveGame(playerId = state.playerId)
+                    sendEffect(GameEffect.LeftGame)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -166,6 +169,16 @@ class GameViewModel(
                 if (newStatus == GameStatus.GAME_OVER) {
                     sendEffect(GameEffect.GameFinished)
                 }
+            }
+    }
+
+    private suspend fun observeErrorMessage() {
+        gameRepository.observeErrorMessage()
+            .catch { e ->
+                updateState { copy(errorMessage = e.message) }
+            }
+            .collectLatest { error ->
+                updateState { copy(errorMessage = error) }
             }
     }
 

@@ -1,6 +1,5 @@
 package id.usecase.word_battle.data.repository
 
-import id.usecase.word_battle.PlatformLogger
 import id.usecase.word_battle.domain.model.Chat
 import id.usecase.word_battle.domain.repository.GameRepository
 import id.usecase.word_battle.models.GameMode
@@ -25,6 +24,7 @@ class GameRepositoryImpl(
 
     private val lobby = MutableStateFlow<Lobby?>(null)
     private val gameRoom = MutableStateFlow<GameRoom?>(null)
+    private val errorMessage = MutableStateFlow<String>("")
     private val chatRoom = MutableStateFlow<List<Chat>>(emptyList())
 
     init {
@@ -34,7 +34,9 @@ class GameRepositoryImpl(
                 ?.collectLatest { event ->
                     when (event) {
                         // error handling soon
-                        is GameEvent.Error -> TODO()
+                        is GameEvent.Error -> {
+                            errorMessage.update { event.message }
+                        }
 
                         // Player joined the queue
                         is GameEvent.QueueJoined -> {
@@ -131,6 +133,7 @@ class GameRepositoryImpl(
     }
 
     override suspend fun leaveGame(playerId: String) {
+        webSocketManager.sendCommand(GameCommand.LeaveGame(playerId))
         gameRoom.value = null
     }
 
@@ -148,6 +151,10 @@ class GameRepositoryImpl(
                 word = word
             )
         )
+    }
+
+    override fun observeErrorMessage(): Flow<String> {
+        return errorMessage.map { it }
     }
 
     override fun observeLobby(): Flow<Lobby?> {

@@ -37,6 +37,11 @@ interface GameRepository {
     )
 
     /**
+     * End current round
+     */
+    fun observeErrorMessage(): Flow<String>
+
+    /**
      * Observe lobby state changes
      */
     fun observeLobby(): Flow<Lobby?>

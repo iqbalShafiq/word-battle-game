@@ -41,7 +41,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import id.usecase.word_battle.PlatformLogger
 import id.usecase.word_battle.protocol.GameStatus
 import id.usecase.word_battle.ui.components.CountdownTimer
 import id.usecase.word_battle.ui.components.ErrorState
@@ -63,8 +62,6 @@ fun GameScreen(
     viewModel: GameViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    PlatformLogger.debug("GameScreen", "State: $state")
-
     val snackbarHostState = remember { SnackbarHostState() }
     val haptic = LocalHapticFeedback.current
 
@@ -86,6 +83,10 @@ fun GameScreen(
 
                 is GameEffect.ShowError -> {
                     snackbarHostState.showSnackbar(effect.message)
+                }
+
+                is GameEffect.LeftGame -> {
+                    onGameFinished()
                 }
             }
         }
@@ -120,7 +121,7 @@ fun GameScreen(
                 },
                 actions = {
                     // Exit button - consider handling game abandonment
-                    IconButton(onClick = { onGameFinished() }) {
+                    IconButton(onClick = { viewModel.processIntent(GameIntent.LeaveGame) }) {
                         Icon(Icons.Default.Close, contentDescription = "Exit")
                     }
                 }
@@ -146,7 +147,6 @@ fun GameScreen(
                 }
 
                 else -> {
-                    // Main game content
                     GameContent(
                         state = state,
                         onWordChange = { word ->

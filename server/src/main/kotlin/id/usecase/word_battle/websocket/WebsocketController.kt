@@ -123,7 +123,7 @@ class WebSocketController : KoinComponent {
             GameEvent.QueueJoined(
                 playerId = command.playerId,
                 position = position,
-                estimatedWaitTime = position * 10 // simple estimate: 10 seconds per position
+                estimatedWaitTime = position * 10
             )
         )
 
