@@ -2,6 +2,7 @@ package id.usecase.word_battle.service
 
 import id.usecase.word_battle.config.Timing
 import id.usecase.word_battle.models.GameMode
+import id.usecase.word_battle.models.GamePlayer
 import id.usecase.word_battle.protocol.GameEvent
 import id.usecase.word_battle.websocket.SessionManager
 import kotlinx.coroutines.CoroutineScope
@@ -127,7 +128,7 @@ class MatchmakingService(
                 val gamePlayers = playerIds.mapNotNull { playerId ->
                     val profile = userService.getPlayerProfile(playerId)
                     profile?.let {
-                        id.usecase.word_battle.models.GamePlayer(
+                        GamePlayer(
                             id = profile.id,
                             username = profile.username
                         )

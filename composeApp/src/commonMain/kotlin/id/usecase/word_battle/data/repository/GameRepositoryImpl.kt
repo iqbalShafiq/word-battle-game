@@ -62,6 +62,7 @@ class GameRepositoryImpl(
                         is GameEvent.RoundStarted -> {
                             gameRoom.update {
                                 it?.copy(
+                                    state = GameStatus.ROUND_ACTIVE,
                                     currentRound = event.round.roundNumber,
                                     currentRoundId = event.round.id,
                                     currentLetters = event.round.letters,

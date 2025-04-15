@@ -147,6 +147,7 @@ class GameViewModel(
 
                 updateState {
                     copy(
+                        isLoading = game.state == GameStatus.WAITING,
                         gameId = game.id,
                         gameState = game.state,
                         players = game.gamePlayers,

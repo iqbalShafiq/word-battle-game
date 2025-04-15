@@ -68,24 +68,34 @@ fun WordBattleApp(
     val isWebSocketConnected = webSocketState == GameWebSocketService.ConnectionState.CONNECTED
 
     WordBattleTheme(darkTheme = isSystemInDarkTheme()) {
-        Scaffold(
-            topBar = {
-                NetworkStatusBar(
-                    isConnected = isNetworkConnected,
-                    isWebSocketConnected = isWebSocketConnected
-                )
-            }
-        ) { innerPadding ->
-            Surface(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                color = MaterialTheme.colorScheme.background
-            ) {
-                Box {
-                    val navController = rememberNavController()
-                    NavGraph(navController = navController)
-                }
+//        Scaffold(
+//            topBar = {
+//                NetworkStatusBar(
+//                    isConnected = isNetworkConnected,
+//                    isWebSocketConnected = isWebSocketConnected
+//                )
+//            }
+//        ) { innerPadding ->
+//            Surface(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(innerPadding),
+//                color = MaterialTheme.colorScheme.background
+//            ) {
+//                Box {
+//                    val navController = rememberNavController()
+//                    NavGraph(navController = navController)
+//                }
+//            }
+//        }
+        Surface(
+            modifier = Modifier
+                .fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Box {
+                val navController = rememberNavController()
+                NavGraph(navController = navController)
             }
         }
     }
