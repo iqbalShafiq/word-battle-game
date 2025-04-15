@@ -1,6 +1,5 @@
 package id.usecase.word_battle.network
 
-import android.util.Log
 import id.usecase.word_battle.PlatformLogger
 import id.usecase.word_battle.auth.TokenManager
 import id.usecase.word_battle.models.WebSocketCommandMessage
@@ -20,7 +19,6 @@ import io.ktor.websocket.readText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -106,40 +104,46 @@ class GameWebSocketClient(
                                     PlatformLogger.debug(TAG, "Received message: $text")
                                     _incomingEvent.emit(message.event)
                                 } catch (e: Exception) {
-                                    Log.e(TAG, "Error parsing message: $text", e)
+                                    PlatformLogger.error(TAG, "Error parsing message: $text", e)
                                 }
                             }
+
                             is Frame.Close -> {
-                                Log.d(TAG, "WebSocket closed by server")
+                                PlatformLogger.debug(TAG, "WebSocket closed by server")
                                 throw CancellationException("WebSocket closed by server")
                             }
-                            else -> { /* Ignore other frame types */ }
+
+                            else -> { /* Ignore other frame types */
+                            }
                         }
                     }
                 } catch (e: CancellationException) {
-                    Log.d(TAG, "WebSocket cancelled", e)
+                    PlatformLogger.error(TAG, "WebSocket cancelled", e)
                     _connectionStatus.emit(ConnectionStatus.DISCONNECTED)
+
                     // Attempt to reconnect
                     scope.launch {
-                        delay(5000) // Wait 5 seconds before reconnecting
+                        delay(5000)
                         reconnect()
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error in WebSocket receive loop", e)
+                    PlatformLogger.error(TAG, "Error in WebSocket receive loop", e)
                     _connectionStatus.emit(ConnectionStatus.DISCONNECTED)
+
                     // Attempt to reconnect
                     scope.launch {
-                        delay(5000) // Wait 5 seconds before reconnecting
+                        delay(5000)
                         reconnect()
                     }
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "WebSocket connection failed", e)
+            PlatformLogger.error(TAG, "WebSocket connection failed", e)
             _connectionStatus.emit(ConnectionStatus.FAILED)
+
             // Attempt to reconnect
             scope.launch {
-                delay(5000) // Wait 5 seconds before reconnecting
+                delay(5000)
                 reconnect()
             }
         }
@@ -151,17 +155,19 @@ class GameWebSocketClient(
     suspend fun sendCommand(message: GameCommand) {
         try {
             val session = webSocketSession ?: run {
-                Log.e(TAG, "Attempted to send message with no active session")
+                PlatformLogger.error(TAG, "Attempted to send message with no active session")
                 return
             }
+
             val command = WebSocketCommandMessage(
                 type = "COMMAND",
                 command = message
             )
 
+            PlatformLogger.debug(TAG, "Sending message: ${Json.encodeToString(command)}")
             session.send(Frame.Text(Json.encodeToString(command)))
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send message", e)
+            PlatformLogger.error(TAG, "Failed to send message", e)
             reconnect()
         }
     }
@@ -175,7 +181,7 @@ class GameWebSocketClient(
             webSocketSession = null
             _connectionStatus.emit(ConnectionStatus.DISCONNECTED)
         } catch (e: Exception) {
-            Log.e(TAG, "Error closing WebSocket", e)
+            PlatformLogger.error(TAG, "Error closing WebSocket", e)
         }
     }
 
@@ -185,16 +191,6 @@ class GameWebSocketClient(
     suspend fun reconnect() {
         disconnect()
         connect()
-    }
-
-    /**
-     * Release resources
-     */
-    fun release() {
-        scope.cancel()
-        scope.launch {
-            disconnect()
-        }
     }
 
     companion object {

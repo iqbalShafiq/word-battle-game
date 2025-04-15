@@ -85,7 +85,8 @@ fun LobbyScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                .padding(paddingValues)
+                .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
             // Matchmaking content
