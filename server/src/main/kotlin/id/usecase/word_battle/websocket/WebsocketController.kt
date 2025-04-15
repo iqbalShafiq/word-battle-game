@@ -212,7 +212,7 @@ class WebSocketController : KoinComponent {
      * Handle explicit disconnect request
      */
     private suspend fun handleRequestedDisconnect(command: GameCommand.LeaveGame) {
-        if (command.gameId != null) gameService.endGame(command.gameId!!)
+//        if (command.gameId != null) gameService.endGame(command.gameId!!)
         handleDisconnect(command.playerId)
     }
 

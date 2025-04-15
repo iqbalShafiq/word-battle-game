@@ -215,9 +215,8 @@ class GameService(
                 )
             }
         } else {
-            // Start next round after delay
             gameScope.launch {
-                delay(5000) // 5 second delay between rounds
+                delay(5000)
                 startNextRound(gameId, round.roundNumber + 1)
             }
         }
@@ -307,18 +306,19 @@ class GameService(
 
             // Filter out the disconnected player
             val remainingPlayers = gameSession.players.filter { it != playerId }
+            endGame(gameId)
 
-            if (remainingPlayers.isEmpty()) {
-                // End the game if no players left
-                endGame(gameId)
-                logger.info("Game $gameId ended due to all players disconnected")
-            } else {
-                // Notify remaining players
-                SessionManager.sendEventToPlayers(
-                    remainingPlayers,
-                    GameEvent.Error("A player has disconnected")
-                )
-            }
+//            if (remainingPlayers.isEmpty()) {
+//                // End the game if no players left
+//                endGame(gameId)
+//                logger.info("Game $gameId ended due to all players disconnected")
+//            } else {
+//                // Notify remaining players
+//                SessionManager.sendEventToPlayers(
+//                    remainingPlayers,
+//                    GameEvent.Error("A player has disconnected")
+//                )
+//            }
         }
 
         // Clean up tracking
